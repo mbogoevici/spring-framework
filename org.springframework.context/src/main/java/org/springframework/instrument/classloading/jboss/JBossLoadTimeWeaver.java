@@ -61,7 +61,16 @@ public class JBossLoadTimeWeaver implements LoadTimeWeaver {
 	 */
 	public JBossLoadTimeWeaver(ClassLoader classLoader) {
 		Assert.notNull(classLoader, "ClassLoader must not be null");
-		this.classLoader = new JBossClassLoaderAdapter(classLoader);
+		String classLoaderClassName = classLoader.getClass().getName();
+		if (classLoaderClassName.startsWith("org.jboss.classloader")) {
+			// JBoss AS 5 or JBoss AS 6
+			this.classLoader = new JBossMcClassLoaderAdapter(classLoader);
+		} else if (classLoaderClassName.startsWith("org.jboss.modules")) {
+			// JBoss AS 7
+			this.classLoader = new JBossModulesClassLoaderAdapter(classLoader);
+		} else {
+			throw new IllegalArgumentException("Unexpected classloader type: " + classLoaderClassName);
+		}
 	}
 
 
